@@ -1,11 +1,4 @@
-class libjson {
-    exec {"download libjson":
-        command => 'bash -c "cd /usr/local/src && /usr/bin/git clone https://github.com/json-c/json-c.git"',
-        creates => '/usr/local/src/json-c',
-        path => '/usr/bin:/bin',
-        require => Package['git'],
-    }
-
+class buildtools {
     package {[
             'autoconf',
             'automake',
@@ -17,12 +10,25 @@ class libjson {
         ensure => present,
         require => [Exec['apt-get update']]
     }
+}
+
+class libjson {
+    require buildtools
+
+    exec {"download libjson":
+        command => 'git clone https://github.com/json-c/json-c.git',
+        creates => '/usr/local/src/json-c',
+        path => '/usr/bin:/bin',
+        require => Package['git'],
+        cwd => '/usr/local/src',
+    }
 
     exec {"install libjson":
-        command => 'bash -c "cd /usr/local/src/json-c && sh autogen.sh && ./configure && make && make install"',
+        command => 'sh autogen.sh && ./configure && make && make install',
         path => '/usr/bin:/bin',
         require => Exec['download libjson'],
         creates => '/usr/local/lib/libjson.so',
+        cwd => '/usr/local/src/json-c',
     }
 }
 
@@ -45,6 +51,16 @@ class basesys {
     }
 }
 
-require basesys
-require libjson
+class zephir {
+    require buildtools
+    require libjson
+    require basesys
+
+    exec {"install zephir":
+        cwd => '/vagrant',
+        command => 'sh install',
+        path => '/usr/bin:/bin',
+    }
+}
+
 require zephir
