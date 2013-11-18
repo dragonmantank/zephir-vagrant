@@ -4,6 +4,7 @@ class buildtools {
             'automake',
             'gcc',
             'git',
+            'libpcre3-dev',
             'libtool',
             'make',
         ]:
